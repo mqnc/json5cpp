@@ -1,5 +1,4 @@
 
-// #include <stack>
 #include <array>
 #include <vector>
 #include <string>
@@ -14,7 +13,6 @@
 namespace JSON5 {
 
 class Stringifier {
-	//std::stack<Object*> stack;
 	std::string indent;
 	//std::vector<std::string> propertyList;
 	//let replacerFunc
@@ -29,7 +27,6 @@ public:
 		const Value& value,
 		const std::variant<std::string, size_t> space = ""
 	) {
-		//stack = {};
 		indent = "";
 		//propertyList = {};
 		//let replacerFunc
@@ -212,11 +209,6 @@ private:
 	}
 
 	std::string serializeObject(const Object& value) {
-		// if (stack.indexOf(value) >= 0) {
-		// 	throw TypeError('Converting circular structure to JSON5')
-		// }
-
-		//stack.push(value);
 
 		std::string stepback = indent;
 		indent += gap;
@@ -252,7 +244,6 @@ private:
 			}
 		}
 
-		//stack.pop();
 		indent = stepback;
 		return final;
 	}
@@ -286,11 +277,6 @@ private:
 	}
 
 	std::string serializeArray(const Array& value) {
-		// if (stack.indexOf(value) >= 0) {
-		// 	throw TypeError('Converting circular structure to JSON5')
-		// }
-
-		// stack.push(value)
 
 		std::string stepback = indent;
 		indent += gap;
@@ -319,7 +305,6 @@ private:
 			}
 		}
 
-		//stack.pop()
 		indent = stepback;
 		return final;
 	}

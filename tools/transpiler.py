@@ -40,7 +40,7 @@ def replaceFromTo(string, start, end, replace):
     
     return string
 
-with open("lib/parse.js", "r") as f:
+with open("js_reference/lib/parse.js", "r") as f:
 	js = f.read()
 
 beginning = js.split("const lexStates = {", 1)[0]
@@ -104,8 +104,6 @@ cpp = replaceFirstAfter(
 	cpp, "const lexStates = {", "\n}\n", "\n  }\n\n  return incomplete\n}\n")
 cpp = replaceFirstAfter(
 	cpp, "const parseStates = {", "\n}\n", "\n  }\n}\n")
-
-cpp = replaceFirstAfter()
 
 cpp = ( cpp
 	.replace("const lexStates = {", 
