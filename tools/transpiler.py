@@ -486,5 +486,5 @@ cpp = replaceFromTo(cpp, "void pop ()", "\n};\n",
 };
 """)
 
-with open("parse_.cpp", "w") as f:
+with open("tools/parse_.cpp", "w") as f:
 	f.write(cpp)

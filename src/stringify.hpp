@@ -2,6 +2,7 @@
 #include <array>
 #include <vector>
 #include <string>
+#include <optional>
 #include <charconv>
 
 #include "utf8.hpp"
@@ -12,12 +13,17 @@
 
 namespace JSON5 {
 
+struct StringifyOptions {
+	std::variant<std::string, size_t> space = "";
+	std::optional<char> quote = std::nullopt;
+};
+
 class Stringifier {
 	std::string indent;
 	//std::vector<std::string> propertyList;
 	//let replacerFunc
 	std::string gap;
-	//std::string quote;
+	std::optional<char> quote;
 
 	template <class>
 	static inline constexpr bool always_false_v = false;
@@ -25,13 +31,13 @@ class Stringifier {
 public:
 	std::string stringify(
 		const Value& value,
-		const std::variant<std::string, size_t> space = ""
+		const StringifyOptions options = {}
 	) {
 		indent = "";
 		//propertyList = {};
 		//let replacerFunc
 		gap = "";
-		//std::string quote;
+		quote = options.quote;
 
 		// if (
 		//     replacer != null &&
@@ -80,11 +86,11 @@ public:
 		// } else if (typeof space === 'string') {
 		//     gap = space.substr(0, 10)
 		// }
-		if (std::holds_alternative<size_t>(space)) {
-			gap = std::string(std::min(std::get<size_t>(space), 10uL), ' ');
+		if (std::holds_alternative<size_t>(options.space)) {
+			gap = std::string(std::min(std::get<size_t>(options.space), 10uL), ' ');
 		}
 		else {
-			gap = std::get<std::string>(space).substr(0, 10);
+			gap = std::get<std::string>(options.space).substr(0, 10);
 		}
 		return serializeProperty("", Object {{"", value}});
 	}
@@ -165,8 +171,15 @@ private:
 
 		std::string product = "";
 
-		for (size_t i = 0; i < value.size(); i++) {
-			const char c = value[i]; // todo: UTF8
+		std::string_view rest = value;
+		while (rest.size() > 0) {
+			const UTF8Peek peek = peekUTF8(rest);
+			if (peek.status != UTF8Peek::Status::ok) {
+				throw std::runtime_error("invalid UTF-8 sequence in string");
+			}
+			const char32_t c = peek.codepoint;
+			rest = rest.substr(peek.bytesRead);
+
 			switch (c) {
 				case '\'':
 					numSingleQuotes++;
@@ -177,7 +190,7 @@ private:
 					product += c;
 					continue;
 				case '\0':
-					product += util::isDigit(value[i + 1]) ? "\\x00" : "\\0"; // todo: UTF8
+					product += util::isDigit(peekUTF8(rest).codepoint) ? "\\x00" : "\\0";
 					continue;
 				case '\\': product += "\\\\"; continue;
 				case '\b': product += "\\b"; continue;
@@ -186,8 +199,8 @@ private:
 				case '\r': product += "\\r"; continue;
 				case '\t': product += "\\t"; continue;
 				case '\v': product += "\\v"; continue;
-					//case '\u2028': product += "\\u2028"; continue; // todo
-					//case '\u2029': product += "\\u2029"; continue;
+				case 0x2028: product += "\\u2028"; continue;
+				case 0x2029: product += "\\u2029"; continue;
 			}
 
 			if (c < ' ') {
@@ -198,10 +211,11 @@ private:
 			};
 
 			product += c;
+
 		}
 
-		// todo: consider user choice for quote
-		const char quoteChar = (numSingleQuotes <= numDoubleQuotes) ? '\'' : '"';
+		const char quoteChar = quote ? *quote
+			: (numSingleQuotes <= numDoubleQuotes) ? '\'' : '"';
 
 		replaceAll(product, std::string() + quoteChar, std::string("\\") + quoteChar);
 
