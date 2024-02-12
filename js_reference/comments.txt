@@ -1,0 +1,13 @@
+
+stringify.js:
+
+        const replacements = {
+            "'": "\\'",
+            '"': '\\"',
+
+they will never be reached
+
+I find this super unnecessarily confusing:
+        const quoteChar = quote || Object.keys(quotes).reduce((a, b) => (quotes[a] < quotes[b]) ? a : b)
+
+quoteString() takes only one argument but is always called with two
