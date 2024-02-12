@@ -19,7 +19,7 @@ enum class TokenType{
 
 struct Token{
     TokenType type;
-    std::variant<JsonValue, char32_t> value;
+    std::variant<Value, char32_t> value;
     size_t line;
     size_t column;
 };

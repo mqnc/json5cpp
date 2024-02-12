@@ -11,22 +11,22 @@
 #include "parserstate.hpp"
 #include "token.hpp"
 
-namespace JSON5{
+namespace JSON5 {
 
-template <class>
-inline constexpr bool always_false_v = false;
-
-class Json5Stringifier {
-	//std::stack<JsonObject*> stack;
+class Stringifier {
+	//std::stack<Object*> stack;
 	std::string indent;
 	//std::vector<std::string> propertyList;
 	//let replacerFunc
 	std::string gap;
 	//std::string quote;
 
+	template <class>
+	static inline constexpr bool always_false_v = false;
+
 public:
 	std::string stringify(
-		const JsonValue& value,
+		const Value& value,
 		const std::variant<std::string, size_t> space = ""
 	) {
 		//stack = {};
@@ -89,7 +89,7 @@ public:
 		else {
 			gap = std::get<std::string>(space).substr(0, 10);
 		}
-		return serializeProperty("", JsonObject {{"", value}});
+		return serializeProperty("", Object {{"", value}});
 	}
 
 private:
@@ -112,7 +112,7 @@ private:
 
 	template <typename K, typename H>
 	std::string serializeProperty(const K& key, const H& holder) {
-		const JsonValue& value = holder.at(key);
+		const Value& value = holder.at(key);
 		// if (!std::holds_alternative<Null>(value)) {
 		//     if (typeof value.toJSON5 === 'function') {
 		//         value = value.toJSON5(key)
@@ -150,10 +150,10 @@ private:
 					auto result = std::to_chars(buffer.data(), buffer.data() + buffer.size(), arg);
 					return std::string(buffer.data(), result.ptr - buffer.data());
 				}
-				else if constexpr (std::is_same_v<T, JsonArray>) {
+				else if constexpr (std::is_same_v<T, Array>) {
 					return serializeArray(arg);
 				}
-				else if constexpr (std::is_same_v<T, JsonObject>) {
+				else if constexpr (std::is_same_v<T, Object>) {
 					return serializeObject(arg);
 				}
 				else {
@@ -211,7 +211,7 @@ private:
 		return quoteChar + product + quoteChar;
 	}
 
-	std::string serializeObject(const JsonObject& value) {
+	std::string serializeObject(const Object& value) {
 		// if (stack.indexOf(value) >= 0) {
 		// 	throw TypeError('Converting circular structure to JSON5')
 		// }
@@ -285,7 +285,7 @@ private:
 		return key;
 	}
 
-	std::string serializeArray(const JsonArray& value) {
+	std::string serializeArray(const Array& value) {
 		// if (stack.indexOf(value) >= 0) {
 		// 	throw TypeError('Converting circular structure to JSON5')
 		// }
@@ -324,5 +324,12 @@ private:
 		return final;
 	}
 };
+
+std::string stringify(
+	const Value& value,
+	const std::variant<std::string, size_t> space = ""
+) {
+	return Stringifier {}.stringify(value, space);
+}
 
 }

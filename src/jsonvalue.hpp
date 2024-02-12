@@ -10,29 +10,29 @@ namespace JSON5{
 struct Null {};
 const Null null;
 
-struct JsonArray;
-struct JsonObject;
+struct Array;
+struct Object;
 
-using JsonValue = std::variant<
+using Value = std::variant<
 	Null,
 	bool,
 	double,
 	std::string,
-	JsonArray,
-	JsonObject
+	Array,
+	Object
 	>;
 
-struct JsonArray: public std::vector<JsonValue> {
-	using std::vector<JsonValue>::vector;
+struct Array: public std::vector<Value> {
+	using std::vector<Value>::vector;
 };
 
-struct JsonObject: public std::map<std::string, JsonValue> {
-	using std::map<std::string, JsonValue>::map;
+struct Object: public std::map<std::string, Value> {
+	using std::map<std::string, Value>::map;
 };
 
 bool operator==(Null, Null) { return true; }
 
-bool operator==(const JsonValue& lhs, const JsonValue& rhs) {
+bool operator==(const Value& lhs, const Value& rhs) {
 	return std::visit( [](const auto& left, const auto& right) {
 			if constexpr (std::is_same_v<decltype(left), decltype(right)>) {
 				return left == right;

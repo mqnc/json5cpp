@@ -113,7 +113,7 @@ cpp = ( cpp
 	.replace("const parseStates = {",
 		"void consumeToken (State s) {\n  switch (s) {") \
 	.replace("function newToken (type, value) ",
-		"Token newToken (TokenType type, std::variant<JsonValue, char32_t> value = null) ") \
+		"Token newToken (TokenType type, std::variant<Value, char32_t> value = null) ") \
 	.replace("function literal (s) {\n    for (const c of s) {",
 		"void literal ($CONST std::string& s) {\n    for ($CONST auto& c: s) { // TODO UTF-8")
 	.replace("function hexEscape", "char32_t hexEscape")
@@ -140,23 +140,23 @@ cpp = ( cpp
 	.replace("sign * 0", "sign * 0.0")
 	.replace("buffer += escape()", '{ auto esc = escape(); if (esc) { buffer += *esc; } }')
 	.replace(".length", ".size()")
-	.replace("let value", "JsonValue value")
+	.replace("let value", "Value value")
 	.replace("switch (token.value)", "switch (std::get<char32_t>(token.value))")
 	.replace("switch (token.type) {", "switch (token.type) { default: break")
-	.replace("value = []", "value = JsonArray {}")
-	.replace("value = {}", "value = JsonObject {}")
-	.replace("value = token.value", "value = std::get<JsonValue>(token.value)")
+	.replace("value = []", "value = Array {}")
+	.replace("value = {}", "value = Object {}")
+	.replace("value = token.value", "value = std::get<Value>(token.value)")
 )
 
 cpp = replaceFromTo(cpp, "    if (root === undefined)", "\n    }\n",
 """	if (stack.size() == 0) {
 		root = value
 	} else {
-		JsonValue& parent = stack.top()
-		if (std::holds_alternative<JsonArray>(parent)) {
-			std::get<JsonArray>(parent).push_back(value)
+		Value& parent = stack.top()
+		if (std::holds_alternative<Array>(parent)) {
+			std::get<Array>(parent).push_back(value)
 		} else {
-			auto result = std::get<JsonObject>(parent).insert({key, value})
+			auto result = std::get<Object>(parent).insert({key, value})
 			if (!result.second) {
 				throw std::runtime_error("Key " + key + " already exists in object")
 			}
@@ -170,17 +170,17 @@ cpp = re.sub(r"function (\w+) \(c\)", r"auto \1 (char32_t c)", cpp)
 cpp = re.sub(r"    (\w+) \(\) \{", r"    case State::\1: {", cpp)
 cpp = re.sub(r"(\w+)State = '(\w+)'", r"\1State = State::\2", cpp)
 cpp = re.sub(r"\$\{(.*?)\}", r'" + std::to_string(\1) + "', cpp)
-cpp = re.sub(r"Array.isArray\((\w+)\)", r"std::holds_alternative<JsonArray>(\1)", cpp)
+cpp = re.sub(r"Array.isArray\((\w+)\)", r"std::holds_alternative<Array>(\1)", cpp)
 cpp = ( cpp
 	.replace("std::to_string(formatChar(c))", "formatChar(c)")
 	.replace("function push", "void push")
 	.replace("function pop", "void pop")
 	.replace("value !== null && typeof value === 'object'",
-		  "(std::holds_alternative<JsonObject>(value) || std::holds_alternative<JsonArray>(value))")
+		  "(std::holds_alternative<Object>(value) || std::holds_alternative<Array>(value))")
 	.replace("current == null", "std::holds_alternative<Null>(current)")
 	.replace("stack[stack.size() - 1]", "stack.top()")
-	.replace("const current", "$CONST JsonValue& current")
-	.replace("key = token.value", "key = std::get<std::string>(std::get<JsonValue>(token.value))")
+	.replace("const current", "$CONST Value& current")
+	.replace("key = token.value", "key = std::get<std::string>(std::get<Value>(token.value))")
 	.replace("token.value === ']'", "std::get<char32_t>(token.value) == ']'")
 	.replace("c === undefined", "c == EndOfInput")
 )
@@ -263,24 +263,24 @@ cpp = """
 struct Null {};
 const Null null;
 
-struct JsonArray;
-struct JsonObject;
+struct Array;
+struct Object;
 
-using JsonValue = std::variant<
+using Value = std::variant<
 	Null,
 	bool,
 	double,
 	std::string,
-	JsonArray,
-	JsonObject
+	Array,
+	Object
 	>;
 
-struct JsonArray: public std::vector<JsonValue> {
-	using std::vector<JsonValue>::vector;
+struct Array: public std::vector<Value> {
+	using std::vector<Value>::vector;
 };
 
-struct JsonObject: public std::map<std::string, JsonValue> {
-	using std::map<std::string, JsonValue>::map;
+struct Object: public std::map<std::string, Value> {
+	using std::map<std::string, Value>::map;
 };
 
 """ \
@@ -292,27 +292,27 @@ const char32_t EndOfInput = char32_t(-1);
 
 struct Token{
     TokenType type;
-    std::variant<JsonValue, char32_t> value;
+    std::variant<Value, char32_t> value;
     size_t line;
 	size_t column;
 };
 
 Token incomplete {TokenType::incomplete, null, 0, 0};
 
-class Json5Parser{
+class Parser{
 
 std::string_view source;
 State parseState;
-std::stack<JsonValue> stack;
+std::stack<Value> stack;
 size_t pos;
 size_t line;
 size_t column;
 Token token;
 std::string key;
-JsonValue root;
+Value root;
 
 public:
-JsonValue parse (std::string_view text) {
+Value parse (std::string_view text) {
     source = text;
     parseState = State::start;
     stack = {};
@@ -402,17 +402,17 @@ char32_t read () {
 
 cpp = replaceFromTo(cpp, "void push ()", "\n};\n",
 """void push () {
-    JsonValue temp;
+    Value temp;
 
     switch (token.type) {
     case TokenType::punctuator:
         switch (std::get<char32_t>(token.value)) {
         case '{':
-            temp = JsonObject {};
+            temp = Object {};
             break;
 
         case '[':
-            temp = JsonArray {};
+            temp = Array {};
             break;
         };
 
@@ -422,7 +422,7 @@ cpp = replaceFromTo(cpp, "void push ()", "\n};\n",
     case TokenType::boolean:
     case TokenType::numeric:
     case TokenType::string:
-        temp = std::get<JsonValue>(token.value);
+        temp = std::get<Value>(token.value);
         break;
 
     default:;
@@ -431,17 +431,17 @@ cpp = replaceFromTo(cpp, "void push ()", "\n};\n",
     //     throw invalidToken();
     };
 
-    JsonValue* value;
+    Value* value;
     if (stack.size() == 0) {
         root = temp;
         value = &root;
     } else {
-        JsonValue& parent = stack.top();
-        if (std::holds_alternative<JsonArray>(parent)) {
-            std::get<JsonArray>(parent).push_back(temp);
-            value = &std::get<JsonArray>(parent).back();
+        Value& parent = stack.top();
+        if (std::holds_alternative<Array>(parent)) {
+            std::get<Array>(parent).push_back(temp);
+            value = &std::get<Array>(parent).back();
         } else {
-            auto result = std::get<JsonObject>(parent).insert({key, temp});
+            auto result = std::get<Object>(parent).insert({key, temp});
             if (!result.second) {
                 throw std::runtime_error("Key " + key + " already exists in object");
             };
@@ -449,19 +449,19 @@ cpp = replaceFromTo(cpp, "void push ()", "\n};\n",
         };
     };
 
-    if ((std::holds_alternative<JsonObject>(*value) || std::holds_alternative<JsonArray>(*value))) {
+    if ((std::holds_alternative<Object>(*value) || std::holds_alternative<Array>(*value))) {
         stack.push(*value);
 
-        if (std::holds_alternative<JsonArray>(*value)) {
+        if (std::holds_alternative<Array>(*value)) {
             parseState = State::beforeArrayValue;
         } else {
             parseState = State::beforePropertyName;
         };
     } else {
-        const JsonValue& current = stack.top();
+        const Value& current = stack.top();
         if (std::holds_alternative<Null>(current)) {
             parseState = State::end;
-        } else if (std::holds_alternative<JsonArray>(current)) {
+        } else if (std::holds_alternative<Array>(current)) {
             parseState = State::afterArrayValue;
         } else {
             parseState = State::afterPropertyValue;
@@ -478,8 +478,8 @@ cpp = replaceFromTo(cpp, "void pop ()", "\n};\n",
         parseState = State::end;
     }
     else{
-        const JsonValue& current = stack.top();
-        if (std::holds_alternative<JsonArray>(current)) {
+        const Value& current = stack.top();
+        if (std::holds_alternative<Array>(current)) {
             parseState = State::afterArrayValue;
         } else {
             parseState = State::afterPropertyValue;

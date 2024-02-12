@@ -37,20 +37,20 @@ public:
     void clear() { data.clear(); }
 };
 
-class Json5Parser{
+class Parser{
 
 std::string_view source;
 State parseState;
-std::stack<JsonValue*> stack;
+std::stack<Value*> stack;
 size_t pos;
 size_t line;
 size_t column;
 Token token;
 std::string key;
-JsonValue root;
+Value root;
 
 public:
-JsonValue parse (std::string_view text) {
+Value parse (std::string_view text) {
     source = text;
     parseState = State::start;
     stack = {};
@@ -716,7 +716,7 @@ Token consumeCharacter (State s) {
   return incomplete;
 };
 
-Token newToken (TokenType type, std::variant<JsonValue, char32_t> value = null) {
+Token newToken (TokenType type, std::variant<Value, char32_t> value = null) {
     return {
         type,
         value,
@@ -862,7 +862,7 @@ void consumeToken (State s) {
         switch (token.type) {
         case TokenType::identifier:
         case TokenType::string:
-            key = std::get<std::string>(std::get<JsonValue>(token.value));
+            key = std::get<std::string>(std::get<Value>(token.value));
             parseState = State::afterPropertyName;
             return;
 
@@ -977,17 +977,17 @@ void consumeToken (State s) {
 };
 
 void push () {
-    JsonValue temp;
+    Value temp;
 
     switch (token.type) {
     case TokenType::punctuator:
         switch (std::get<char32_t>(token.value)) {
         case '{':
-            temp = JsonObject {};
+            temp = Object {};
             break;
 
         case '[':
-            temp = JsonArray {};
+            temp = Array {};
             break;
         };
 
@@ -997,7 +997,7 @@ void push () {
     case TokenType::boolean:
     case TokenType::numeric:
     case TokenType::string:
-        temp = std::get<JsonValue>(token.value);
+        temp = std::get<Value>(token.value);
         break;
 
     default:;
@@ -1006,17 +1006,17 @@ void push () {
     //     throw invalidToken();
     };
 
-    JsonValue* value;
+    Value* value;
     if (stack.size() == 0) {
         root = temp;
         value = &root;
     } else {
-        JsonValue& parent = *stack.top();
-        if (std::holds_alternative<JsonArray>(parent)) {
-            std::get<JsonArray>(parent).push_back(temp);
-            value = &std::get<JsonArray>(parent).back();
+        Value& parent = *stack.top();
+        if (std::holds_alternative<Array>(parent)) {
+            std::get<Array>(parent).push_back(temp);
+            value = &std::get<Array>(parent).back();
         } else {
-            auto result = std::get<JsonObject>(parent).insert({key, temp});
+            auto result = std::get<Object>(parent).insert({key, temp});
             if (!result.second) {
                 throw std::runtime_error("Key " + key + " already exists in object");
             };
@@ -1024,19 +1024,19 @@ void push () {
         };
     };
 
-    if ((std::holds_alternative<JsonObject>(*value) || std::holds_alternative<JsonArray>(*value))) {
+    if ((std::holds_alternative<Object>(*value) || std::holds_alternative<Array>(*value))) {
         stack.push(value);
 
-        if (std::holds_alternative<JsonArray>(*value)) {
+        if (std::holds_alternative<Array>(*value)) {
             parseState = State::beforeArrayValue;
         } else {
             parseState = State::beforePropertyName;
         };
     } else {
-        const JsonValue& current = *stack.top();
+        const Value& current = *stack.top();
         if (std::holds_alternative<Null>(current)) {
             parseState = State::end;
-        } else if (std::holds_alternative<JsonArray>(current)) {
+        } else if (std::holds_alternative<Array>(current)) {
             parseState = State::afterArrayValue;
         } else {
             parseState = State::afterPropertyValue;
@@ -1051,8 +1051,8 @@ void pop () {
         parseState = State::end;
     }
     else{
-        const JsonValue& current = *stack.top();
-        if (std::holds_alternative<JsonArray>(current)) {
+        const Value& current = *stack.top();
+        if (std::holds_alternative<Array>(current)) {
             parseState = State::afterArrayValue;
         } else {
             parseState = State::afterPropertyValue;
@@ -1135,5 +1135,9 @@ std::runtime_error syntaxError(const std::string& message) {
 };
 
 };
+
+Value parse(std::string_view text){
+	return Parser{}.parse(text);
+}
 
 }
