@@ -1012,7 +1012,7 @@ void push () {
         value = &root;
     } else {
         Value& parent = *stack.top();
-        if (std::holds_alternative<Array>(parent)) {
+        if (isArray(parent)) {
             std::get<Array>(parent).push_back(temp);
             value = &std::get<Array>(parent).back();
         } else {
@@ -1024,19 +1024,19 @@ void push () {
         };
     };
 
-    if ((std::holds_alternative<Object>(*value) || std::holds_alternative<Array>(*value))) {
+    if ((isObject(*value) || isArray(*value))) {
         stack.push(value);
 
-        if (std::holds_alternative<Array>(*value)) {
+        if (isArray(*value)) {
             parseState = State::beforeArrayValue;
         } else {
             parseState = State::beforePropertyName;
         };
     } else {
         const Value& current = *stack.top();
-        if (std::holds_alternative<Null>(current)) {
+        if (isNull(current)) {
             parseState = State::end;
-        } else if (std::holds_alternative<Array>(current)) {
+        } else if (isArray(current)) {
             parseState = State::afterArrayValue;
         } else {
             parseState = State::afterPropertyValue;
@@ -1052,7 +1052,7 @@ void pop () {
     }
     else{
         const Value& current = *stack.top();
-        if (std::holds_alternative<Array>(current)) {
+        if (isArray(current)) {
             parseState = State::afterArrayValue;
         } else {
             parseState = State::afterPropertyValue;

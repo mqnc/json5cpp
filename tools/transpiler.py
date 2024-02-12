@@ -2,43 +2,35 @@ import re
 import hashlib
 
 def replaceFirstAfter(string, start, find, replace):
-    start_index = string.find(start)
-    if start_index == -1:
-        return string
-    find_index = string.find(find, start_index + len(start))
-    if find_index == -1:
-        return string
-    replaced_string = string[:find_index] + replace + string[find_index + len(find):]
-    return replaced_string
+	start_index = string.find(start)
+	if start_index == -1:
+		return string
+	find_index = string.find(find, start_index + len(start))
+	if find_index == -1:
+		return string
+	replaced_string = string[:find_index] + replace + string[find_index + len(find):]
+	return replaced_string
 
 def replaceWithin(string, start, end, find, replace):
-    start_index = string.find(start)
-    end_index = string.find(end, start_index + len(start))
-    
-    if start_index != -1 and end_index != -1:
-        substring_between = string[start_index + len(start):end_index]
-        replaced_substring = substring_between.replace(find, replace)
-        modified_string = (
-            string[:start_index + len(start)] + 
-            replaced_substring + 
-            string[end_index:]
-        )
-        return modified_string
-    
-    return string
+	start_index = string.find(start)
+	end_index = string.find(end, start_index + len(start))
+
+	if start_index != -1 and end_index != -1:
+		substring_between = string[start_index + len(start):end_index]
+		replaced_substring = substring_between.replace(find, replace)
+		modified_string = (string[:start_index + len(start)] + replaced_substring + string[end_index:])
+		return modified_string
+
+	return string
 
 def replaceFromTo(string, start, end, replace):
-    start_index = string.find(start)
-    end_index = string.find(end, start_index + len(start))
-    
-    if start_index != -1 and end_index != -1:
-        return (
-            string[:start_index] + 
-            replace + 
-            string[end_index + len(end):]
-        )
-    
-    return string
+	start_index = string.find(start)
+	end_index = string.find(end, start_index + len(start))
+
+	if start_index != -1 and end_index != -1:
+		return (string[:start_index] + replace + string[end_index + len(end):])
+
+	return string
 
 with open("js_reference/lib/parse.js", "r") as f:
 	js = f.read()
@@ -47,14 +39,13 @@ beginning = js.split("const lexStates = {", 1)[0]
 beginning_hash = hashlib.sha256(beginning.encode()).hexdigest()
 js = js[len(beginning):]
 
-if(beginning_hash != "5faf9754d998da50dd8a207108920134ae58232c7f3202f8cf7223023b812064"):
-	raise RuntimeError("reference implementation has changed;"
-        + " adapt C++ implementation at the end of the transpiler and include"
-		+ " the new hash: " + beginning_hash)
+if (beginning_hash != "5faf9754d998da50dd8a207108920134ae58232c7f3202f8cf7223023b812064"):
+	raise RuntimeError(
+			"reference implementation has changed;"
+			+ " adapt C++ implementation at the end of the transpiler and include" + " the new hash: " + beginning_hash
+	)
 
-
-
-states=[]
+states = []
 insideLexer = False
 
 lines = js.split("\n")
@@ -62,7 +53,7 @@ for line in lines:
 	# match = re.search(r'function (\w+) \((.*?)\)', line)
 	# if match:
 	# 	forwardDeclarations.append(f"auto {match.group(1)} ({match.group(2)});")
-	
+
 	if line == "const lexStates = {":
 		insideLexer = True
 
@@ -79,75 +70,68 @@ tokens.append("incomplete")
 
 cpp = js
 
-cpp = replaceFromTo(cpp, "function peek", "\n}",
-"""char32_t peek () {
+cpp = replaceFromTo(
+		cpp, "function peek", "\n}", """char32_t peek () {
 	if (pos < source.size()) {
 		return source[pos]; // TODO UTF-8
 	}
 	return EndOfInput;
-}""")
+}"""
+)
 
 cpp = replaceFromTo(cpp, "function formatChar", "\n}", "$FORMATCHAR")
 
-cpp = replaceWithin(
-	cpp, "const lexStates = {", "\n}\n",
-	"return\n", "return incomplete\n")
+cpp = replaceWithin(cpp, "const lexStates = {", "\n}\n", "return\n", "return incomplete\n")
 
-cpp = replaceWithin(
-	cpp, "const lexStates = {", "\n}\n",
-	"\n    },\n", "\n    } break\n")
-cpp = replaceWithin(
-	cpp, "const parseStates = {", "\n}\n",
-	"\n    },\n", "\n    } break\n")
+cpp = replaceWithin(cpp, "const lexStates = {", "\n}\n", "\n    },\n", "\n    } break\n")
+cpp = replaceWithin(cpp, "const parseStates = {", "\n}\n", "\n    },\n", "\n    } break\n")
 
-cpp = replaceFirstAfter(
-	cpp, "const lexStates = {", "\n}\n", "\n  }\n\n  return incomplete\n}\n")
-cpp = replaceFirstAfter(
-	cpp, "const parseStates = {", "\n}\n", "\n  }\n}\n")
+cpp = replaceFirstAfter(cpp, "const lexStates = {", "\n}\n", "\n  }\n\n  return incomplete\n}\n")
+cpp = replaceFirstAfter(cpp, "const parseStates = {", "\n}\n", "\n  }\n}\n")
 
 cpp = ( cpp
-	.replace("const lexStates = {", 
+		.replace("const lexStates = {",
 		"Token consumeCharacter (State s) {\n  switch (s) {") \
-	.replace("const parseStates = {",
+ .replace("const parseStates = {",
 		"void consumeToken (State s) {\n  switch (s) {") \
-	.replace("function newToken (type, value) ",
+ .replace("function newToken (type, value) ",
 		"Token newToken (TokenType type, std::variant<Value, char32_t> value = null) ") \
-	.replace("function literal (s) {\n    for (const c of s) {",
+ .replace("function literal (s) {\n    for (const c of s) {",
 		"void literal ($CONST std::string& s) {\n    for ($CONST auto& c: s) { // TODO UTF-8")
-	.replace("function hexEscape", "char32_t hexEscape")
-	.replace("function invalid", "std::runtime_error invalid")
-	.replace("invalidChar (c)", "invalidChar (char32_t c)")
-	.replace("function unicodeEscape", "char32_t unicodeEscape")
-	.replace("function escape", "std::optional<char32_t> escape")
-	.replace("return ''", "return std::nullopt")
-	.replace("function separatorChar (c)", "void separatorChar (char32_t c)")
-	.replace(
-"""function syntaxError (message) {
+		.replace("function hexEscape", "char32_t hexEscape")
+		.replace("function invalid", "std::runtime_error invalid")
+		.replace("invalidChar (c)", "invalidChar (char32_t c)")
+		.replace("function unicodeEscape", "char32_t unicodeEscape")
+		.replace("function escape", "std::optional<char32_t> escape")
+		.replace("return ''", "return std::nullopt")
+		.replace("function separatorChar (c)", "void separatorChar (char32_t c)")
+		.replace(
+		"""function syntaxError (message) {
     const err = new SyntaxError(message)
     err.lineNumber = line
     err.columnNumber = column
     return err
 }""",
-"""std::runtime_error syntaxError($CONST std::string& message) {
+		"""std::runtime_error syntaxError($CONST std::string& message) {
 	return std::runtime_error(std::to_string(line) + ":" + std::to_string(column) + ": " + message)
 }""")
-	.replace("console.warn", "std::cerr << ")
-	.replace("util.", "util::")
-	.replace("parseInt(buffer, 16)", "std::stoi(buffer, 0, 16)")
-	.replace("Number(", "std::stod(")
-	.replace("sign * 0", "sign * 0.0")
-	.replace("buffer += escape()", '{ auto esc = escape(); if (esc) { buffer += *esc; } }')
-	.replace(".length", ".size()")
-	.replace("let value", "Value value")
-	.replace("switch (token.value)", "switch (std::get<char32_t>(token.value))")
-	.replace("switch (token.type) {", "switch (token.type) { default: break")
-	.replace("value = []", "value = Array {}")
-	.replace("value = {}", "value = Object {}")
-	.replace("value = token.value", "value = std::get<Value>(token.value)")
-)
+		.replace("console.warn", "std::cerr << ")
+		.replace("util.", "util::")
+		.replace("parseInt(buffer, 16)", "std::stoi(buffer, 0, 16)")
+		.replace("Number(", "std::stod(")
+		.replace("sign * 0", "sign * 0.0")
+		.replace("buffer += escape()", '{ auto esc = escape(); if (esc) { buffer += *esc; } }')
+		.replace(".length", ".size()")
+		.replace("let value", "Value value")
+		.replace("switch (token.value)", "switch (std::get<char32_t>(token.value))")
+		.replace("switch (token.type) {", "switch (token.type) { default: break")
+		.replace("value = []", "value = Array {}")
+		.replace("value = {}", "value = Object {}")
+		.replace("value = token.value", "value = std::get<Value>(token.value)")
+		)
 
-cpp = replaceFromTo(cpp, "    if (root === undefined)", "\n    }\n",
-"""	if (stack.size() == 0) {
+cpp = replaceFromTo(
+		cpp, "    if (root === undefined)", "\n    }\n", """	if (stack.size() == 0) {
 		root = value
 	} else {
 		Value& parent = stack.top()
@@ -169,46 +153,32 @@ cpp = re.sub(r"    (\w+) \(\) \{", r"    case State::\1: {", cpp)
 cpp = re.sub(r"(\w+)State = '(\w+)'", r"\1State = State::\2", cpp)
 cpp = re.sub(r"\$\{(.*?)\}", r'" + std::to_string(\1) + "', cpp)
 cpp = re.sub(r"Array.isArray\((\w+)\)", r"std::holds_alternative<Array>(\1)", cpp)
-cpp = ( cpp
-	.replace("std::to_string(formatChar(c))", "formatChar(c)")
-	.replace("function push", "void push")
-	.replace("function pop", "void pop")
-	.replace("value !== null && typeof value === 'object'",
-		  "(std::holds_alternative<Object>(value) || std::holds_alternative<Array>(value))")
-	.replace("current == null", "std::holds_alternative<Null>(current)")
-	.replace("stack[stack.size() - 1]", "stack.top()")
-	.replace("const current", "$CONST Value& current")
-	.replace("key = token.value", "key = std::get<std::string>(std::get<Value>(token.value))")
-	.replace("token.value === ']'", "std::get<char32_t>(token.value) == ']'")
-	.replace("c === undefined", "c == EndOfInput")
+cpp = (
+		cpp.replace("std::to_string(formatChar(c))", "formatChar(c)").replace("function push",
+		"void push").replace("function pop", "void pop").replace(
+		"value !== null && typeof value === 'object'",
+		"(std::holds_alternative<Object>(value) || std::holds_alternative<Array>(value))"
+		).replace("current == null",
+		"std::holds_alternative<Null>(current)").replace("stack[stack.size() - 1]",
+		"stack.top()").replace("const current", "$CONST Value& current").replace(
+		"key = token.value", "key = std::get<std::string>(std::get<Value>(token.value))"
+		).replace("token.value === ']'",
+		"std::get<char32_t>(token.value) == ']'").replace("c === undefined", "c == EndOfInput")
 )
 
 for token in tokens:
 	cpp = cpp.replace(f"'{token}'", f"TokenType::{token}")
 
-cpp = (cpp
-	.replace("const ", "const auto ")
-	.replace("let ", "auto ")
-	.replace("function ", "auto ")
-	.replace("===", "==")
-	.replace("!==", "!=")
-	.replace("Infinity", "std::numeric_limits<double>::infinity()")
-	.replace("String.fromCodePoint(", "char32_t(")
-	.replace("NaN", 'std::nan("")')
-	.replace("''", '""')
-	.replace('''"'"''', "'\\''")
-	.replace("`", '"')
-	.replace("State::default", "State::deflt")
-	.replace("case undefined", "case EndOfInput")
-	.replace("    },", "    }")
-	.replace("\n", ";\n")
-	.replace("\n;\n", "\n\n")
-	.replace(":;", ":")
-	.replace("{;", "{")
-	.replace(",;", ",")
-	.replace("$CONST", "const")
-	.replace("$FORMATCHAR",
-r"""std::string formatChar(char32_t c) {
+cpp = (
+		cpp.replace("const ", "const auto ").replace("let ", "auto ").replace("function ",
+		"auto ").replace("===", "==").replace("!==",
+		"!=").replace("Infinity",
+		"std::numeric_limits<double>::infinity()").replace("String.fromCodePoint(",
+		"char32_t(").replace("NaN", 'std::nan("")').replace("''", '""').replace('''"'"''', "'\\''").replace("`",
+		'"').replace("State::default", "State::deflt").replace("case undefined",
+		"case EndOfInput").replace("    },", "    }").replace("\n", ";\n").replace("\n;\n", "\n\n").replace(":;",
+		":").replace("{;", "{").replace(",;", ",").replace("$CONST", "const").replace(
+		"$FORMATCHAR", r"""std::string formatChar(char32_t c) {
 	const std::map<char32_t, std::string> replacements = {
 		{'\'', "\\'"},
 		{'"', "\\\""},
@@ -235,7 +205,8 @@ r"""std::string formatChar(char32_t c) {
 	};
 
 	return std::to_string(c); // TODO should be an utf8 character, no number
-}""")
+}"""
+		)
 )
 cpp = re.sub(r"'(\w\w+)'", r'"\1"', cpp)
 cpp = re.sub(r"'\\u(\w\w\w\w)'", r"0x\1", cpp)
@@ -282,9 +253,9 @@ struct Object: public std::map<std::string, Value> {
 };
 
 """ \
-	+ f"enum class State{{\n\t{sep.join(states)}\n}};\n\n" \
-	+ f"enum class TokenType{{\n\t{sep.join(tokens)}\n}};" \
-	+ """
+ + f"enum class State{{\n\t{sep.join(states)}\n}};\n\n" \
+ + f"enum class TokenType{{\n\t{sep.join(tokens)}\n}};" \
+ + """
 
 const char32_t EndOfInput = char32_t(-1);
 
@@ -398,8 +369,8 @@ char32_t read () {
 
 """ + cpp + "\n\n};\n"
 
-cpp = replaceFromTo(cpp, "void push ()", "\n};\n",
-"""void push () {
+cpp = replaceFromTo(
+		cpp, "void push ()", "\n};\n", """void push () {
     Value temp;
 
     switch (token.type) {
@@ -466,10 +437,11 @@ cpp = replaceFromTo(cpp, "void push ()", "\n};\n",
         };
     };
 };
-""")
+"""
+)
 
-cpp = replaceFromTo(cpp, "void pop ()", "\n};\n",
-"""void pop () {
+cpp = replaceFromTo(
+		cpp, "void pop ()", "\n};\n", """void pop () {
     stack.pop();
 
     if (stack.size() == 0){
@@ -484,7 +456,8 @@ cpp = replaceFromTo(cpp, "void pop ()", "\n};\n",
         }
     };
 };
-""")
+"""
+)
 
 with open("tools/parse_.cpp", "w") as f:
 	f.write(cpp)

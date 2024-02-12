@@ -326,9 +326,9 @@ private:
 
 std::string stringify(
 	const Value& value,
-	const std::variant<std::string, size_t> space = ""
+	const StringifyOptions options = {}
 ) {
-	return Stringifier {}.stringify(value, space);
+	return Stringifier {}.stringify(value, options);
 }
 
 }
