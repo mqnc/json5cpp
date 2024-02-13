@@ -257,12 +257,12 @@ Token consumeCharacter (State s) {
         case 't':
             read();
             literal("rue");
-            return newToken(TokenType::boolean, true);
+            return newToken(TokenType::boolean, Value{true});
 
         case 'f':
             read();
             literal("alse");
-            return newToken(TokenType::boolean, false);
+            return newToken(TokenType::boolean, Value{false});
 
         case '-':
         case '+':
@@ -1033,13 +1033,16 @@ void push () {
             parseState = State::beforePropertyName;
         };
     } else {
-        const Value& current = *stack.top();
-        if (isNull(current)) {
+        if (stack.size() == 0){
             parseState = State::end;
-        } else if (isArray(current)) {
-            parseState = State::afterArrayValue;
-        } else {
-            parseState = State::afterPropertyValue;
+        }
+        else{
+            const Value& current = *stack.top();
+            if (isArray(current)) {
+                parseState = State::afterArrayValue;
+            } else {
+                parseState = State::afterPropertyValue;
+            }
         };
     };
 };
@@ -1137,7 +1140,7 @@ std::runtime_error syntaxError(const std::string& message) {
 };
 
 Value parse(std::string_view text){
-	return Parser{}.parse(text);
+    return Parser{}.parse(text);
 }
 
 }
