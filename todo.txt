@@ -1,3 +1,5 @@
 make peek() caching
 json hold int64_t and uint64_t
 replacer fn
+use proper throw function on invalid utf8
+check if line/col is repeated
