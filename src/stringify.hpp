@@ -14,7 +14,8 @@
 namespace JSON5 {
 
 struct StringifyOptions {
-	std::variant<std::string, size_t> space = "";
+	// int so the user can write {4} instead of {4u}
+	std::variant<std::string, int> space;
 	std::optional<char> quote = std::nullopt;
 };
 
@@ -86,8 +87,11 @@ public:
 		// } else if (typeof space === 'string') {
 		//     gap = space.substr(0, 10)
 		// }
-		if (std::holds_alternative<size_t>(options.space)) {
-			gap = std::string(std::min(std::get<size_t>(options.space), 10uL), ' ');
+		if (std::holds_alternative<int>(options.space)) {
+			int i = std::get<int>(options.space);
+			if (i < 0) { i = 0; }
+			if (i > 10) { i = 10; }
+			gap = std::string(i, ' ');
 		}
 		else {
 			gap = std::get<std::string>(options.space).substr(0, 10);
@@ -149,6 +153,8 @@ private:
 					return quoteString(arg);
 				}
 				else if constexpr (std::is_same_v<T, double>) {
+					if (std::isnan(arg)) { return std::string("NaN"); }
+					if (std::isinf(arg)) { return std::string(arg > 0 ? "Infinity" : "-Infinity"); }
 					std::array<char, 64> buffer;
 					auto result = std::to_chars(buffer.data(), buffer.data() + buffer.size(), arg);
 					return std::string(buffer.data(), result.ptr - buffer.data());
@@ -205,7 +211,7 @@ private:
 
 			if (c < ' ') {
 				char hexString[5];
-				std::sprintf(hexString, "\\x%02X", c);
+				std::sprintf(hexString, "\\x%02x", c);
 				product += hexString;
 				continue;
 			};

@@ -9,3 +9,4 @@ include_directories(src)
 
 add_executable(test_parse test/parse.cpp)
 add_executable(test_errors test/errors.cpp)
+add_executable(test_stringify test/stringify.cpp)
