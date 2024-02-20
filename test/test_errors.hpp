@@ -1,8 +1,10 @@
 
+#pragma once
+
 #include "test.h"
 #include "parse.hpp"
 
-int main() {
+void testErrors() {
 
 	try {
 		JSON5::parse("");
@@ -427,8 +429,4 @@ int main() {
 			"throws on unclosed arrays after values"
 		);
 	}
-
-	report();
-
-	return status();
 }

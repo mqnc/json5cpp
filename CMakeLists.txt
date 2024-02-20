@@ -4,9 +4,12 @@ project(json5cpp)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0 --coverage")
 
 include_directories(src)
 
-add_executable(test_parse test/parse.cpp)
-add_executable(test_errors test/errors.cpp)
-add_executable(test_stringify test/stringify.cpp)
+add_executable(test_suite test/main.cpp)
+
+include(CTest)
+
+add_test(NAME test_suite COMMAND test_suite)

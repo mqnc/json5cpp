@@ -1,4 +1,6 @@
 
+#pragma once
+
 #include <string>
 #include <iostream>
 #include <sstream>
@@ -6,7 +8,7 @@
 #include "test.h"
 #include "parse.hpp"
 
-int main() {
+void testParse() {
 
 	expect(
 		JSON5::parse("{}")
@@ -258,8 +260,4 @@ int main() {
 	);
 
 	// a reviver was not implemented since it is not really sensible in C++
-
-	report();
-
-	return status();
 }

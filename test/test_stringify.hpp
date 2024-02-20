@@ -1,4 +1,6 @@
 
+#pragma once
+
 #include <string>
 #include <limits>
 #include <cmath>
@@ -9,7 +11,7 @@
 
 const std::string _0 {'\0'};
 
-int main() {
+void testStringify() {
 
 	expect(
 		JSON5::stringify(JSON5::Object {})
@@ -399,9 +401,4 @@ int main() {
 			== "{'a\\'':'1\\''}",
 		"uses single quotes if provided"
 	);
-
-	report();
-
-	return status();
-
 }
