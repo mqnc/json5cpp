@@ -14,3 +14,5 @@ echo collecting coverage data...
 llvm-profdata merge -sparse test.profraw -o report.profdata
 llvm-cov show ./test_suite -show-line-counts-or-regions -Xdemangler c++filt -Xdemangler -n -instr-profile=report.profdata -format=html > report.html
 llvm-cov report ./test_suite -instr-profile=report.profdata > summary.txt
+
+cat summary.txt
