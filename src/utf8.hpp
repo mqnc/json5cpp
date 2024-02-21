@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <string_view>
+#include <cstdint>
 
 struct UTF8Peek {
 	char32_t codepoint;
