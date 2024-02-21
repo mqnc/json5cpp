@@ -1,5 +1,4 @@
-# Simple workflow for deploying static content to GitHub Pages
-name: Deploy static content to Pages
+name: Publish Coverage on GitHub-Pages
 
 on:
   # Runs on pushes targeting the default branch
@@ -27,17 +26,20 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Install llvm
+        run: sudo apt install llvm
+      - name: Build and Test
+        run: sh coverage-clang.sh
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload entire repository
-          path: '.'
+          path: './build/report'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

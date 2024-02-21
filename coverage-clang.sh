@@ -1,4 +1,6 @@
 
+set -e
+
 echo cleanup previous builds...
 rm -rf build
 mkdir build
@@ -12,7 +14,6 @@ LLVM_PROFILE_FILE="test.profraw" ./test_suite
 
 echo collecting coverage data...
 llvm-profdata merge -sparse test.profraw -o report.profdata
-llvm-cov show ./test_suite -show-line-counts-or-regions -Xdemangler c++filt -Xdemangler -n -instr-profile=report.profdata -format=html > report.html
-llvm-cov report ./test_suite -instr-profile=report.profdata > summary.txt
-
-cat summary.txt
+mkdir report
+llvm-cov show ./test_suite -show-line-counts-or-regions -Xdemangler c++filt -Xdemangler -n -instr-profile=report.profdata -format=html > report/index.html
+llvm-cov report ./test_suite -instr-profile=report.profdata > report/summary.txt
