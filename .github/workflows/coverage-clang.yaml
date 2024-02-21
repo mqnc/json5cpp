@@ -8,5 +8,8 @@ jobs:
       - name: Check out this repository
         uses: actions/checkout@v4.1.0
 
+      - name: Install llvm
+        run: sudo apt install llvm
+
       - name: Build and test this project
         run: sh coverage-clang.sh

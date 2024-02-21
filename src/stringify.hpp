@@ -6,6 +6,7 @@
 #include <string>
 #include <optional>
 #include <charconv>
+#include <cstdint>
 
 #include "utf8.hpp"
 #include "util.hpp"

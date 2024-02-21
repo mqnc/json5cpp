@@ -3,6 +3,7 @@
 
 #include <variant>
 #include "jsonvalue.hpp"
+#include <cstdint>
 
 namespace JSON5{
 

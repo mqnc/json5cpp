@@ -13,6 +13,7 @@
 #include <optional>
 #include <cstdio>
 #include <cassert>
+#include <cstdint>
 
 #include "utf8.hpp"
 #include "util.hpp"
