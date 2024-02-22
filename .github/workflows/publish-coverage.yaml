@@ -33,7 +33,7 @@ jobs:
       - name: Install llvm
         run: sudo apt install llvm
       - name: Build and Test
-        run: sh coverage-clang.sh
+        run: sh build_test_coverage.sh
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Upload artifact
