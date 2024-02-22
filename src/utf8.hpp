@@ -17,7 +17,7 @@ struct UTF8Peek {
 UTF8Peek peekUTF8(std::string_view source) {
 
 	if (source.empty()) {
-		return {0, 0, UTF8Peek::Status::endOfString};
+		return {char32_t(-1), 0, UTF8Peek::Status::endOfString};
 	}
 
 	uint8_t u_source0 = source[0];
@@ -42,12 +42,14 @@ UTF8Peek peekUTF8(std::string_view source) {
 		&& (source[1] & 0b1100'0000) == 0b1000'0000
 		&& (source[2] & 0b1100'0000) == 0b1000'0000
 	) {
-		return {
-			((char32_t(u_source0) & 0b0000'1111) << 12)
-				| ((char32_t(source[1]) & 0b0011'1111) << 6)
-				| (char32_t(source[2]) & 0b0011'1111),
-			3, UTF8Peek::Status::ok
-		};
+		char32_t cp = ((char32_t(u_source0) & 0b0000'1111) << 12)
+			| ((char32_t(source[1]) & 0b0011'1111) << 6)
+			| (char32_t(source[2]) & 0b0011'1111);
+
+		// reject surrogate pairs
+		if (cp < 0xd800 || cp > 0xdfff) {
+			return {cp, 3, UTF8Peek::Status::ok};
+		}
 	}
 	else if (
 		(u_source0 & 0b1111'1000) == 0b1111'0000
@@ -56,16 +58,18 @@ UTF8Peek peekUTF8(std::string_view source) {
 		&& (source[2] & 0b1100'0000) == 0b1000'0000
 		&& (source[3] & 0b1100'0000) == 0b1000'0000
 	) {
-		return {
-			((char32_t(u_source0) & 0b0000'0111) << 18)
-				| ((char32_t(source[1]) & 0b0011'1111) << 12)
-				| ((char32_t(source[2]) & 0b0011'1111) << 6)
-				| (char32_t(source[3]) & 0b0011'1111),
-			4, UTF8Peek::Status::ok
-		};
+		char32_t cp = ((char32_t(u_source0) & 0b0000'0111) << 18)
+			| ((char32_t(source[1]) & 0b0011'1111) << 12)
+			| ((char32_t(source[2]) & 0b0011'1111) << 6)
+			| (char32_t(source[3]) & 0b0011'1111);
+
+		// U+10FFFF is the last valid unicode character
+		if (cp <= 0x10ffff) {
+			return {cp, 4, UTF8Peek::Status::ok};
+		}
 	}
 
-	return {0, 0, UTF8Peek::Status::invalid};
+	return {char32_t(-1), 0, UTF8Peek::Status::invalid};
 }
 
 std::string toUTF8(char32_t codepoint) {
