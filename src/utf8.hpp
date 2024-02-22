@@ -84,6 +84,9 @@ std::string toUTF8(char32_t codepoint) {
 		};
 	}
 	else if (codepoint <= 0b1111'111111'111111) {
+		if(codepoint >= 0xd800 && codepoint <= 0xdfff){
+			return ""; // reject surrogate characters
+		}
 		return {
 			char((codepoint >> 12) | 0b1110'0000),
 			char(((codepoint >> 6) & 0b0011'1111) | 0b1000'0000),

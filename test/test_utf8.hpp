@@ -68,8 +68,28 @@ void testUTF8() {
 				"rejects invalid UTF-8 sequence"
 			);
 		}
-
 	}
 
-
+	{
+		size_t rejections = 0;
+		size_t successes = 0;
+		size_t fails = 0;
+		for (char32_t cp = 0; cp <= 0x110000; cp++) {
+			std::string utf8 = toUTF8(cp);
+			if ((cp >= 0xd800 && cp <= 0xdfff) || cp > 0x10ffff) {
+				if (utf8 == "") { rejections++; }
+				else { fails++; }
+			}
+			else {
+				auto roundtrip = peekUTF8(utf8);
+				if (roundtrip.codepoint == cp) { successes++; }
+				else { fails++; }
+			}
+		}
+		expect(rejections == 0x801,
+			"rejects encoding surrogate and out-of-range codepoints");
+		expect(successes == 0x110000 - 0x800,
+			"passes UTF-8 encode decode roundtrip for all valid codepoints");
+		expect(fails == 0, "and there was no miscount");
+	}
 }
