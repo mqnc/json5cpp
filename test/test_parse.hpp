@@ -65,6 +65,12 @@ void testParse() {
 	);
 
 	expect(
+		JSON5::parse("{abc:1,abc:2}")
+			== JSON5::Object {{"abc", 2.0}},
+		"overwrites properties with same key"
+	);
+
+	expect(
 		JSON5::parse("{a:{b:2}}")
 			== JSON5::Object {{"a", JSON5::Object {{"b", 2.0}}}},
 		"parses nested objects"
