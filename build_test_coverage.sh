@@ -47,7 +47,8 @@ echo collecting coverage data...
 llvm-profdata merge -sparse test.profraw -o report.profdata
 llvm-cov show ./test_suite -show-line-counts-or-regions -Xdemangler c++filt -Xdemangler -n -instr-profile=report.profdata -format=html > $DETAILED_COVERAGE
 llvm-cov report ./test_suite -instr-profile=report.profdata > $COVERAGE_SUMMARY
-coverage=$(sed 's/.* //g' "$COVERAGE_SUMMARY" | tail -n 1)
+# extract region coverage
+coverage=$(sed -n 's/^TOTAL\s\+[0-9]\+\s\+[0-9]\+\s\+\([0-9.]\+\)%\s.*/\1/p' "$COVERAGE_SUMMARY")
 cat $COVERAGE_SUMMARY
-curl https://img.shields.io/badge/coverage-${coverage}25-brightgreen > $COVERAGE_BADGE
-echo "coverage: $coverage"
+curl https://img.shields.io/badge/coverage-${coverage}%25-brightgreen > $COVERAGE_BADGE
+echo "region coverage: $coverage%"
