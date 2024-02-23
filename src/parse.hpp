@@ -188,7 +188,7 @@ private:
 				// };
 
 				return consumeCharacter(parseState);
-			} break;
+			}
 
 			case State::comment: {
 				switch (c) {
@@ -204,7 +204,7 @@ private:
 				};
 
 				throw invalidChar(read());
-			} break;
+			}
 
 			case State::multiLineComment: {
 				switch (c) {
@@ -329,7 +329,7 @@ private:
 				};
 
 				throw invalidChar(read());
-			} break;
+			}
 
 			case State::identifierNameStartEscape: {
 				if (c != 'u') {
@@ -376,7 +376,7 @@ private:
 				};
 
 				return newToken(TokenType::identifier, buffer.str());
-			} break;
+			}
 
 			case State::identifierNameEscape: {
 				if (c != 'u') {
@@ -441,7 +441,7 @@ private:
 				};
 
 				throw invalidChar(read());
-			} break;
+			}
 
 			case State::zero: {
 				switch (c) {
@@ -464,7 +464,7 @@ private:
 				};
 
 				return newToken(TokenType::numeric, sign * 0.0);
-			} break;
+			}
 
 			case State::decimalInteger: {
 				switch (c) {
@@ -486,7 +486,7 @@ private:
 				};
 
 				return newToken(TokenType::numeric, sign * std::stod(buffer.str()));
-			} break;
+			}
 
 			case State::decimalPointLeading: {
 				if (util::isDigit(c)) {
@@ -496,7 +496,7 @@ private:
 				};
 
 				throw invalidChar(read());
-			} break;
+			}
 
 			case State::decimalPoint: {
 				switch (c) {
@@ -514,7 +514,7 @@ private:
 				};
 
 				return newToken(TokenType::numeric, sign * std::stod(buffer.str()));
-			} break;
+			}
 
 			case State::decimalFraction: {
 				switch (c) {
@@ -531,7 +531,7 @@ private:
 				};
 
 				return newToken(TokenType::numeric, sign * std::stod(buffer.str()));
-			} break;
+			}
 
 			case State::decimalExponent: {
 				switch (c) {
@@ -549,7 +549,7 @@ private:
 				};
 
 				throw invalidChar(read());
-			} break;
+			}
 
 			case State::decimalExponentSign: {
 				if (util::isDigit(c)) {
@@ -559,7 +559,7 @@ private:
 				};
 
 				throw invalidChar(read());
-			} break;
+			}
 
 			case State::decimalExponentInteger: {
 				if (util::isDigit(c)) {
@@ -568,7 +568,7 @@ private:
 				};
 
 				return newToken(TokenType::numeric, sign * std::stod(buffer.str()));
-			} break;
+			}
 
 			case State::hexadecimal: {
 				if (util::isHexDigit(c)) {
@@ -578,7 +578,7 @@ private:
 				};
 
 				throw invalidChar(read());
-			} break;
+			}
 
 			case State::hexadecimalInteger: {
 				if (util::isHexDigit(c)) {
@@ -587,7 +587,7 @@ private:
 				};
 
 				return newToken(TokenType::numeric, sign * std::stod(buffer.str()));
-			} break;
+			}
 
 			case State::string: {
 				switch (c) {
@@ -674,7 +674,7 @@ private:
 				};
 
 				throw invalidChar(read());
-			} break;
+			}
 
 			case State::afterPropertyName: {
 				if (c == ':') {
@@ -682,7 +682,7 @@ private:
 				};
 
 				throw invalidChar(read());
-			} break;
+			}
 
 			case State::beforePropertyValue: {
 				lexState = State::value;
@@ -696,7 +696,7 @@ private:
 				};
 
 				throw invalidChar(read());
-			} break;
+			}
 
 			case State::beforeArrayValue: {
 				if (c == ']') {
@@ -714,7 +714,7 @@ private:
 				};
 
 				throw invalidChar(read());
-			} break;
+			}
 
 			case State::end: {
 				// This code is unreachable since it's handled by the default lexState.;
