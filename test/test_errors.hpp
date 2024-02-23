@@ -429,4 +429,17 @@ void testErrors() {
 			"throws on unclosed arrays after values"
 		);
 	}
+
+	try {
+		JSON5::parse("\xff");
+	}
+	catch (const JSON5::SyntaxError& e) {
+		expect(
+			std::string(e.what()).find("JSON5: invalid unicode byte sequence") == 0
+				&& e.lineNumber == 1
+				&& e.columnNumber == 1,
+			"throws on invalid unicode byte sequence"
+		);
+	}
+
 }

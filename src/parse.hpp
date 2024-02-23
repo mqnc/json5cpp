@@ -126,7 +126,7 @@ private:
 		switch (result.status) {
 			case UTF8Peek::Status::ok: return {result.codepoint, result.bytesRead};
 			case UTF8Peek::Status::endOfString: return {EndOfInput, 0};
-			case UTF8Peek::Status::invalid: throw std::runtime_error("invalid UTF-8 byte sequence");
+			case UTF8Peek::Status::invalid: throw invalidUnicode();
 		}
 		assert(false); // suppress "control reaches end of non-void function" warning
 	}
@@ -1093,6 +1093,11 @@ private:
 		};
 
 		return syntaxError("JSON5: invalid character '" + formatChar(c) + "' at " + std::to_string(line) + ":" + std::to_string(column) + "");
+	};
+
+	SyntaxError invalidUnicode() {
+		column += 1;
+		return syntaxError( "JSON5: invalid unicode byte sequence at " + std::to_string(line) + ":" + std::to_string(column) + "");
 	};
 
 	SyntaxError invalidEOF() {
