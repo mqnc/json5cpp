@@ -80,14 +80,14 @@ void testJsonValue() {
 	expect(JSON5::Value {true} != false, "json5 true != C++ false");
 	expect(JSON5::Value {null} != false, "json5 null != C++ false");
 	expect(JSON5::Value {1.0} == JSON5::Value {1.0}, "json5 1.0 == json5 1.0");
-	expect(JSON5::Value {1.0} != JSON5::Value {2.0}, "json5 1.0 == json5 2.0");
+	expect(JSON5::Value {1.0} != JSON5::Value {2.0}, "json5 1.0 != json5 2.0");
 	expect(JSON5::Value {1.0} == 1.0, "json5 1.0 == C++ 1.0");
 	expect(JSON5::Value {1.0} != 2.0, "json5 1.0 != C++ 2.0");
 	expect(JSON5::Value {1.0} != true, "json5 1.0 != C++ true");
-	expect(JSON5::Value {std::nan("")} != JSON5::Value {std::nan("")}, "json5 NaN == json5 NaN");
-	expect(JSON5::Value {std::nan("")} != std::nan(""), "json5 NaN == C++ NaN");
+	expect(JSON5::Value {std::nan("")} != JSON5::Value {std::nan("")}, "json5 NaN != json5 NaN");
+	expect(JSON5::Value {std::nan("")} != std::nan(""), "json5 NaN != C++ NaN");
 	expect(JSON5::Value {"abc"} == JSON5::Value {"abc"}, "json5 \"abc\" == json5 \"abc\"");
-	expect(JSON5::Value {"abc"} != JSON5::Value {"abcd"}, "json5 \"abc\" == json5 \"abcd\"");
+	expect(JSON5::Value {"abc"} != JSON5::Value {"abcd"}, "json5 \"abc\" != json5 \"abcd\"");
 	expect(JSON5::Value {"abc"} == std::string {"abc"}, "json5 \"abc\" == C++ string \"abc\"");
 	expect(JSON5::Value {"abc"} == "abc", "json5 \"abc\" == C++ const char* \"abc\"");
 	expect(JSON5::Value {"1.0"} != JSON5::Value {1.0}, "json5 \"1.0\" != json5 1.0 (sorry, JavaScript)");

@@ -8,7 +8,8 @@ cd build
 mkdir report
 
 BUILD_LOG=report/build_log.txt
-TEST_LOG=report/test_log.txt
+TEST_LOG_TXT=report/test_log.txt
+TEST_LOG_HTML=report/test_log.html
 DETAILED_COVERAGE=report/detailed_coverage.html
 COVERAGE_SUMMARY=report/coverage_summary.txt
 
@@ -21,7 +22,7 @@ echo building test_suite...
 	clang++ -std=c++17 -v -I../src -g -Wall -Wextra -Wpedantic -Werror -fprofile-instr-generate -fcoverage-mapping -o test_suite ../test/main.cpp > $BUILD_LOG
 	cat $BUILD_LOG
 	echo build successful
-	curl -s https://img.shields.io/badge/build-passing-brightgreen > $BUILD_STATUS_BADGE
+	curl -s https://img.shields.io/badge/build-passing-limegreen > $BUILD_STATUS_BADGE
 } || {
 	cat $BUILD_LOG
 	echo build failed
@@ -34,12 +35,19 @@ echo building test_suite...
 echo running tests...
 {
 	cp ../test/UnicodeData.txt .
-	LLVM_PROFILE_FILE="test.profraw" ./test_suite > $TEST_LOG 2>&1
-	cat $TEST_LOG
+	LLVM_PROFILE_FILE="test.profraw" ./test_suite > $TEST_LOG_TXT 2>&1
+	cat $TEST_LOG_TXT
+	html=$(cat $TEST_LOG_TXT | sed \
+		-e 's/$/<br>/' \
+		-e 's/\x1B\[31m/<span style="color:red;">/g' \
+		-e 's/\x1B\[32m/<span style="color:limegreen;">/g' \
+		-e 's/\x1B\[0m/<\/span>/g')
+	html="<html><head><title>JSON5CPP TEST RESULTS</title></head><body style='background-color:black; color:white'><code>${html}</code></body></html>"
+	echo $html > $TEST_LOG_HTML
 	echo tests passed
-	curl -s https://img.shields.io/badge/tests-passing-brightgreen > $TEST_STATUS_BADGE
+	curl -s https://img.shields.io/badge/tests-passing-limegreen > $TEST_STATUS_BADGE
 } || {
-	cat $TEST_LOG
+	cat $TEST_LOG_TXT
 	echo tests failed
 	curl -s https://img.shields.io/badge/tests-failing-red > $TEST_STATUS_BADGE
 }
@@ -51,5 +59,5 @@ llvm-cov report -ignore-filename-regex="test/.*" ./test_suite -instr-profile=rep
 # extract region coverage
 coverage=$(sed -n 's/^TOTAL\s\+[0-9]\+\s\+[0-9]\+\s\+\([0-9.]\+\)%\s.*/\1/p' "$COVERAGE_SUMMARY")
 cat $COVERAGE_SUMMARY
-curl -s https://img.shields.io/badge/coverage-${coverage}%25-brightgreen > $COVERAGE_BADGE
+curl -s https://img.shields.io/badge/coverage-${coverage}%25-limegreen > $COVERAGE_BADGE
 echo "region coverage: $coverage%"

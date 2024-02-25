@@ -1014,7 +1014,7 @@ private:
 				temp = std::get<Value>(token.value);
 				break;
 
-			default:;
+			default:; // suppress unhandled case warning
 				// This code is unreachable.;
 				// default:
 				//     throw invalidToken();
