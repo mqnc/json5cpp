@@ -275,6 +275,12 @@ void testStringify() {
 	);
 
 	expect(
+		JSON5::stringify(JSON5::Array {1.0}, {-1})
+			== "[1]",
+		"does not indent when a negative number is provided"
+	);
+
+	expect(
 		JSON5::stringify(JSON5::Array {1.0}, {"\t"})
 			== "[\n\t1,\n]",
 		"indents with the string provided"

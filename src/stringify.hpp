@@ -184,7 +184,7 @@ private:
 		while (rest.size() > 0) {
 			const UTF8Peek peek = peekUTF8(rest);
 			if (peek.status != UTF8Peek::Status::ok) {
-				throw std::runtime_error("invalid UTF-8 sequence in string");
+				throw std::runtime_error("JSON5: invalid UTF-8 sequence in string");
 			}
 			const char32_t c = peek.codepoint;
 			rest = rest.substr(peek.bytesRead);
@@ -278,7 +278,7 @@ private:
 
 		const UTF8Peek firstChar = peekUTF8(key);
 		if (firstChar.status != UTF8Peek::Status::ok) {
-			throw std::runtime_error("invalid UTF-8 sequence in key");
+			throw std::runtime_error("JSON5: invalid UTF-8 sequence in key");
 		}
 		if (!util::isIdStartChar(firstChar.codepoint)) {
 			return quoteString(key, true);
@@ -288,7 +288,7 @@ private:
 		while (rest.size() > 0) {
 			const UTF8Peek nextChar = peekUTF8(rest);
 			if (nextChar.status != UTF8Peek::Status::ok) {
-				throw std::runtime_error("invalid UTF-8 sequence in key");
+				throw std::runtime_error("JSON5: invalid UTF-8 sequence in key");
 			}
 			if (!util::isIdContinueChar(nextChar.codepoint)) {
 				return quoteString(key, true);

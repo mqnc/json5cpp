@@ -3,6 +3,7 @@
 
 #include "test.h"
 #include "parse.hpp"
+#include "stringify.hpp"
 
 void testErrors() {
 
@@ -27,6 +28,18 @@ void testErrors() {
 				&& e.lineNumber == 1
 				&& e.columnNumber == 4,
 			"throws on documents with only comments"
+		);
+	}
+
+	try {
+		JSON5::parse("/*");
+	}
+	catch (const JSON5::SyntaxError& e) {
+		expect(
+			std::string(e.what()).find("JSON5: invalid end of input") == 0
+				&& e.lineNumber == 1
+				&& e.columnNumber == 3,
+			"throws on unclosed multiline comments"
 		);
 	}
 
@@ -442,4 +455,33 @@ void testErrors() {
 		);
 	}
 
+	try {
+		JSON5::stringify("\xff");
+	}
+	catch (const std::runtime_error& e) {
+		expect(
+			std::string(e.what()).find("JSON5: invalid UTF-8 sequence in string") == 0,
+			"throws on stringifying strings with invalid unicode byte sequence"
+		);
+	}
+
+	try {
+		JSON5::stringify(JSON5::Object{{"\xff_", 1.0}});
+	}
+	catch (const std::runtime_error& e) {
+		expect(
+			std::string(e.what()).find("JSON5: invalid UTF-8 sequence in key") == 0,
+			"throws on stringifying keys starting with invalid unicode byte sequence"
+		);
+	}
+
+	try {
+		JSON5::stringify(JSON5::Object{{"_\xff", 1.0}});
+	}
+	catch (const std::runtime_error& e) {
+		expect(
+			std::string(e.what()).find("JSON5: invalid UTF-8 sequence in key") == 0,
+			"throws on stringifying keys containing invalid unicode byte sequence"
+		);
+	}
 }

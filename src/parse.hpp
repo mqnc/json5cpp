@@ -892,12 +892,12 @@ private:
 					case TokenType::eof:
 						throw invalidEOF();
 
-					default:;
+					default:; // suppress unhandled case warning
 				}
 
 				// This code is unreachable since it's handled by the lexState.;
 				// throw invalidToken();
-			} break;
+			}
 
 			case State::afterPropertyName: {
 				// This code is unreachable since it's handled by the lexState.;
@@ -986,7 +986,7 @@ private:
 				// }
 			}
 
-			default:;
+			default:; // suppress unhandled case warning
 		}
 	}
 
