@@ -50,4 +50,8 @@ bool operator==(const Value& lhs, const Value& rhs) {
 		}, lhs, rhs);
 }
 
+bool operator!=(const Value& lhs, const Value& rhs) {
+	return !(lhs == rhs);
+}
+
 }

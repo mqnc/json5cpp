@@ -38,8 +38,9 @@ void testUtil() {
 		}
 		file.close();
 	} else {
-		std::cerr << "Could not open file UnicodeData.txt, must be in working directory.\n"
-				  << "Can be downloaded here: https://www.unicode.org/Public/10.0.0/ucd/UnicodeData.txt\n";
+		expect(false, "File UnicodeData.txt must be in working directory.\n"
+			"Can be downloaded here: https://www.unicode.org/Public/10.0.0/ucd/UnicodeData.txt");
+		return;
 	}
 
 	auto entry = entries.begin();
