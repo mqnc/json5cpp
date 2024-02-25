@@ -33,6 +33,7 @@ echo building test_suite...
 
 echo running tests...
 {
+	cp ../test/UnicodeData.txt .
 	LLVM_PROFILE_FILE="test.profraw" ./test_suite > $TEST_LOG 2>&1
 	cat $TEST_LOG
 	echo tests passed

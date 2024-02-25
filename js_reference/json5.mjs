@@ -204,7 +204,7 @@ const lexStates = {
             return newToken('eof')
         }
 
-        if (util.isSpaceSeparator(c)) {
+        if (util.isSpaceSeparator(c)) { // /[\u1680\u2000-\u200A\u202F\u205F\u3000]/
             read();
             return
         }
@@ -1439,6 +1439,7 @@ var stringify = function stringify (value, replacer, space) {
 const JSON5 = {
     parse,
     stringify,
+	util
 };
 
 var lib = JSON5;

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+  </head>
+  <body>
+    <script type="module">
+		import JSON5 from "./json5.mjs"
+
+		let start=0;
+		let cont=0;
+
+		for(let c=0; c<=0x10ffff; c++){
+			let char = String.fromCodePoint(c)
+			if(JSON5.util.isIdStartChar(char)){start++;}
+			if(JSON5.util.isIdContinueChar(char)){cont++;}
+		}
+		console.log(start, cont)
+
+	</script>
+  </body>
+</html>
