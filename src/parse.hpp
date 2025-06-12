@@ -1147,7 +1147,7 @@ private:
 
 		if (c < ' ') {
 			char hexString[5];
-			std::sprintf(hexString, "\\x%02X", c);
+			std::snprintf(hexString, sizeof(hexString),  "\\x%02X", c);
 			return hexString;
 		}
 
