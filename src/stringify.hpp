@@ -214,7 +214,7 @@ private:
 
 			if (c < ' ') {
 				char hexString[5];
-				std::sprintf(hexString, "\\x%02x", c);
+				std::snprintf(hexString, sizeof(hexString),  "\\x%02X", c);
 				product += hexString;
 				continue;
 			};
